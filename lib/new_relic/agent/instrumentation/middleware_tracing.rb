@@ -101,7 +101,7 @@ module NewRelic
 
             events.notify(:before_call, env_safe) if first_middleware
 
-            result = (target == self) ? traced_call(env_safe) : target.call(env_safe)
+            result = (target == self) ? traced_call(env) : target.call(env)
 
             if first_middleware
               capture_response_attributes(state, result)
