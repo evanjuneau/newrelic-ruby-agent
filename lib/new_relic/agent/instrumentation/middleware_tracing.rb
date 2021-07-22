@@ -83,7 +83,8 @@ module NewRelic
         end
 
         def call(env)
-          env_safe = Marshal.load(Marshal.dump(env))
+          env_safe = {}
+          env.each_key { |k| env_safe[k] = env[k] }
 
           first_middleware = note_transaction_started(env_safe)
 
