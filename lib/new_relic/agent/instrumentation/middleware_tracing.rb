@@ -83,12 +83,14 @@ module NewRelic
         end
 
         def call(env)
-          first_middleware = note_transaction_started(env)
+          env_safe = Marshal.load(Marshal.dump(env))
+
+          first_middleware = note_transaction_started(env_safe)
 
           state = NewRelic::Agent::Tracer.state
 
           begin
-            options = build_transaction_options(env, first_middleware)
+            options = build_transaction_options(env_safe, first_middleware)
 
             finishable = Tracer.start_transaction_or_segment(
               name: options[:transaction_name],
@@ -96,13 +98,13 @@ module NewRelic
               options: options
             )
 
-            events.notify(:before_call, env) if first_middleware
+            events.notify(:before_call, env_safe) if first_middleware
 
-            result = (target == self) ? traced_call(env) : target.call(env)
+            result = (target == self) ? traced_call(env_safe) : target.call(env_safe)
 
             if first_middleware
               capture_response_attributes(state, result)
-              events.notify(:after_call, env, result)
+              events.notify(:after_call, env_safe, result)
             end
 
             result
